@@ -14,7 +14,7 @@ task :test do |task,args|
   sh sprintf("'%s/Unity.app/Contents/MacOS/Unity' -batchmode -quit -logFile -projectPath '%s' -importPackage '%s'",
     ENV['PACO_UNITY_PATH'].strip.sub('/$',''),
     ENV['PACO_TEST_PATH'].strip,
-    "/Users/ngys/Documents/Github/paco/unity-test-tools.unitypackage")
+    ENV['PACO_TEST_UNITY_TEST_TOOLS_PATH'])
 
   begin
     sh sprintf("'%s/Unity.app/Contents/MacOS/Unity' -batchmode -logFile -projectPath '%s' -executeMethod UnityTest.Batch.RunIntegrationTests -resultsFileDirectory='%s'",
