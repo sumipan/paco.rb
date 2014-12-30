@@ -7,6 +7,9 @@ desc 'test'
 task :test do |task,args|
   Rake::Task[:cleanup].execute
 
+  FileUtils.mkdir_p(ENV['PACO_TEST_PATH']) \
+    unless Dir.exist?(ENV['PACO_TEST_PATH'])
+
   sh sprintf("'%s/Unity.app/Contents/MacOS/Unity' -batchmode -quit -logFile -createProject '%s'",
     ENV['PACO_UNITY_PATH'].strip.sub('/$',''),
     ENV['PACO_TEST_PATH'].strip)
