@@ -39,14 +39,16 @@ task :test do |task,args|
 end
 
 task :cleanup do |task,args|
-  Dir.entries(ENV['PACO_TEST_PATH']).each do |path|
-    next if path.match(/^\.{1,2}$/)
+  if Dir.exist?(ENV['PACO_TEST_PATH']) then
+    Dir.entries(ENV['PACO_TEST_PATH']).each do |path|
+      next if path.match(/^\.{1,2}$/)
 
-    absolute_path = sprintf("%s/%s", ENV['PACO_TEST_PATH'], path)
-    if File.directory?(absolute_path)
-      FileUtils.remove_dir(absolute_path)
-    else
-      FileUtils.remove(absolute_path, {:force => true, :verbose => true})
+      absolute_path = sprintf("%s/%s", ENV['PACO_TEST_PATH'], path)
+      if File.directory?(absolute_path)
+        FileUtils.remove_dir(absolute_path)
+      else
+        FileUtils.remove(absolute_path, {:force => true, :verbose => true})
+      end
     end
   end
 end
