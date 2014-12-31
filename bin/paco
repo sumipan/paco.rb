@@ -2,6 +2,60 @@
 
 require 'rake'
 require 'tmpdir'
+require 'paco'
+require 'zip'
+
+task :install do |task,args|
+  raise 'error.' if !ARGV[1] || !ARGV[1].match(/\.zip$/)
+  raise 'error. not found' unless File.exist?(ARGV[1])
+
+  spec = nil
+  zipfile = File.expand_path(ARGV[1])
+  Zip::File.open(zipfile) do |zipfile|
+    zipfile.each do |entry|
+      destfile = ENV['PACO_UNITY_PROJECT_PATH'] + '/' + entry.name
+
+      FileUtils.remove(entry.name, {:verbose => true}) if File.exist?(entry.name)
+      puts "Extract #{entry.name}"
+      entry.extract(destfile)
+
+      if File.extname(entry.name) == '.paco' then
+        spec = eval File.read(destfile)
+      end
+    end
+  end
+
+  sh sprintf("'%s/Unity.app/Contents/MacOS/Unity' -batchmode -quit -logFile -projectPath '%s' -importPackage '%s'",
+    ENV['PACO_UNITY_PATH'].strip.sub('/$',''),
+    ENV['PACO_TEST_PATH'].strip,
+    spec.name + '.unitypackage')
+end
+
+task :build do |task,args|
+  raise 'error.' if !ARGV[1] || !ARGV[1].match(/\.paco$/)
+
+  spec = eval File.read(File.expand_path(ARGV[1]))
+
+  sh sprintf("'%s/Unity.app/Contents/MacOS/Unity' -batchmode -quit -logFile -projectPath '%s' -exportPackage %s %s",
+    ENV['PACO_UNITY_PATH'].strip.sub('/$',''),
+    Dir.pwd,
+    spec.files.join(' '),
+    spec.name + '.unitypackage')
+
+  zipfile = spec.path + '.zip'
+  FileUtils.remove(zipfile) if File.exist?(zipfile)
+
+  Zip::File.open(zipfile, Zip::File::CREATE) do |zipfile|
+    [
+      spec.name + '.unitypackage',
+      spec.name + '.paco'
+    ].each do |filename|
+      zipfile.add(filename, filename)
+    end
+  end
+
+  FileUtils.remove(spec.name + '.unitypackage')
+end
 
 desc 'test'
 task :test do |task,args|
@@ -18,6 +72,11 @@ task :test do |task,args|
     ENV['PACO_UNITY_PATH'].strip.sub('/$',''),
     ENV['PACO_TEST_PATH'].strip,
     ENV['PACO_TEST_UNITY_TEST_TOOLS_PATH'])
+
+  if ARGV[1] then
+    ENV['PACO_UNITY_PROJECT_PATH'] = ENV['PACO_TEST_PATH']
+    Rake::Task[:install].execute
+  end
 
   begin
     sh sprintf("'%s/Unity.app/Contents/MacOS/Unity' -batchmode -logFile -projectPath '%s' -executeMethod UnityTest.Batch.RunIntegrationTests -resultsFileDirectory='%s'",
