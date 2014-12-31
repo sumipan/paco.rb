@@ -5,12 +5,35 @@ require 'tmpdir'
 require 'paco'
 require 'zip'
 
+task :setup do |task,args|
+  pacofile_path = Dir.pwd + '/.paco'
+  if File.exist?(pacofile_path) then
+    config = YAML.load(File.read(pacofile_path))
+    if config['repository'] then
+      @repository = Paco::Repository.factory(config['repository'])
+    end
+  end
+end
+
 task :install do |task,args|
-  raise 'error.' if !ARGV[1] || !ARGV[1].match(/\.zip$/)
-  raise 'error. not found' unless File.exist?(ARGV[1])
+  raise 'error.' if !ARGV[1]
+
+  file = ARGV[1]
+
+  Rake::Task[:setup].invoke
+  unless File.exist?(file) then
+    match = file.match(/^(.+)-(\d+\.\d+\.\d+)(:?.zip)?$/)
+    if @repository then
+      found_file = @repository.get(match[1], match[2])
+      if found_file then
+        file = found_file
+      end
+    end
+  end
+  raise 'error. not found' unless File.exist?(file)
 
   spec = nil
-  zipfile = File.expand_path(ARGV[1])
+  zipfile = File.expand_path(file)
   Zip::File.open(zipfile) do |zipfile|
     zipfile.each do |entry|
       destfile = ENV['PACO_UNITY_PROJECT_PATH'] + '/' + entry.name
