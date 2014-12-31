@@ -87,34 +87,42 @@ task :test do |task,args|
   FileUtils.mkdir_p(ENV['PACO_TEST_PATH']) \
     unless Dir.exist?(ENV['PACO_TEST_PATH'])
 
+  # create empty project
   sh sprintf("'%s/Unity.app/Contents/MacOS/Unity' -batchmode -quit -logFile -createProject '%s'",
     ENV['PACO_UNITY_PATH'].strip.sub('/$',''),
     ENV['PACO_TEST_PATH'].strip)
 
+  # import UnityTestTools package
   sh sprintf("'%s/Unity.app/Contents/MacOS/Unity' -batchmode -quit -logFile -projectPath '%s' -importPackage '%s'",
     ENV['PACO_UNITY_PATH'].strip.sub('/$',''),
     ENV['PACO_TEST_PATH'].strip,
     ENV['PACO_TEST_UNITY_TEST_TOOLS_PATH'])
 
+  # install specific package
   if ARGV[1] then
     ENV['PACO_UNITY_PROJECT_PATH'] = ENV['PACO_TEST_PATH']
     Rake::Task[:install].execute
   end
 
+  # run test
+  Rake::Task[:test_run].execute
+end
+
+task :test_run do |task,args|
   begin
     sh sprintf("'%s/Unity.app/Contents/MacOS/Unity' -batchmode -logFile -projectPath '%s' -executeMethod UnityTest.Batch.RunIntegrationTests -resultsFileDirectory='%s'",
-      ENV['PACO_UNITY_PATH'].strip.sub('/$',''),
-      ENV['PACO_TEST_PATH'].strip,
-      ENV['PACO_TEST_PATH'].strip)
+    ENV['PACO_UNITY_PATH'].strip.sub('/$',''),
+    ENV['PACO_TEST_PATH'].strip,
+    ENV['PACO_TEST_PATH'].strip)
   rescue
     # ignore RunIntegrationTests exit code
   end
 
   begin
     sh sprintf("'%s/Unity.app/Contents/MacOS/Unity' -batchmode -logFile -projectPath '%s' -executeMethod UnityTest.Batch.RunUnitTests -resultsFileDirectory='%s'",
-      ENV['PACO_UNITY_PATH'].strip.sub('/$',''),
-      ENV['PACO_TEST_PATH'].strip,
-      ENV['PACO_TEST_PATH'].strip)
+    ENV['PACO_UNITY_PATH'].strip.sub('/$',''),
+    ENV['PACO_TEST_PATH'].strip,
+    ENV['PACO_TEST_PATH'].strip)
   rescue
     # ignore RunUnitTests exit code
   end
