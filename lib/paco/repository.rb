@@ -13,7 +13,7 @@ module Repository
   def factory(options)
     repository = nil
 
-    case ENV[REPOSITORY_TYPE_KEY]
+    case options[:type]
     when Type::GOOGLE_DRIVE
       repository = GoogleDrive.new(options[:email], options[:pem], options[:collection_url])
     else
