@@ -13,9 +13,9 @@ module Repository
   def factory(options)
     repository = nil
 
-    case options[:type]
+    case options['type']
     when Type::GOOGLE_DRIVE
-      repository = GoogleDrive.new(options[:email], options[:pem], options[:collection_url])
+      repository = GoogleDrive.new(options['email'], options['pem'], options['collection_url'])
     else
       raise 'error. undefined repository type.'
     end
