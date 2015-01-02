@@ -50,7 +50,7 @@ task :install do |task,args|
 
   sh sprintf("'%s/Unity.app/Contents/MacOS/Unity' -batchmode -quit -logFile -projectPath '%s' -importPackage '%s'",
     ENV['PACO_UNITY_PATH'].strip.sub('/$',''),
-    ENV['PACO_TEST_PATH'].strip,
+    ENV['PACO_UNITY_PROJECT_PATH'].strip,
     spec.name + '.unitypackage')
 end
 
@@ -91,6 +91,8 @@ task :test do |task,args|
   sh sprintf("'%s/Unity.app/Contents/MacOS/Unity' -batchmode -quit -logFile -createProject '%s'",
     ENV['PACO_UNITY_PATH'].strip.sub('/$',''),
     ENV['PACO_TEST_PATH'].strip)
+
+  ENV['PACO_UNITY_PROJECT_PATH'] = ENV['PACO_TEST_PATH']
 
   # import UnityTestTools package
   sh sprintf("'%s/Unity.app/Contents/MacOS/Unity' -batchmode -quit -logFile -projectPath '%s' -importPackage '%s'",
