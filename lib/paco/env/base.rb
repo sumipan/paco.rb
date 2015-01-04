@@ -108,7 +108,7 @@ module Env
 
     def get_package_file(file, repository=nil)
       if !File.exist?(file) then
-        match = file.match(/^(.+)(:?-(\d+\.\d+\.\d+))?(:?.zip)?$/)
+        match = file.match(/^(.+?)(?:-(\d+\.\d+\.\d+))?(?:.zip)?$/)
         if repository then
           found = repository.get(match[1], match[2])
           if found then
