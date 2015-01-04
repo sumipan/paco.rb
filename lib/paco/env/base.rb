@@ -90,7 +90,10 @@ module Env
 
           FileUtils.remove(entry.name, {:verbose => true}) if File.exist?(entry.name)
           puts "Extract #{entry.name}"
-          entry.extract(destfile)
+          entry.extract(destfile) do |entry,destfile|
+            puts sprintf("%s is already exist. overwrite? [y/N]", entry.name)
+            ['y','Y'].include?($stdin.gets.chomp)
+          end
 
           if File.extname(entry.name) == '.paco' then
             spec = eval File.read(destfile)
