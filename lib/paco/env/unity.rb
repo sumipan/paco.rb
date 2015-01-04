@@ -5,10 +5,12 @@ module Env
   class Unity < Base
     include Rake::FileUtilsExt
 
-    attr_reader :unity_path, :project_path
+    attr_reader :unity_path, :project_path, :verbose
 
     def initialize
       super
+
+      @verbose = (ENV['VERBOSE']) ? "-logFile" : ""
 
       raise 'error. check PACO_UNITY_PATH env.' \
         if !ENV['PACO_UNITY_PATH'] || !File.exist?(ENV['PACO_UNITY_PATH'])
@@ -27,7 +29,7 @@ module Env
 
       # Assets 以下を unitypackage にビルドする
       if assets.size > 0 then
-        sh sprintf("'%s/Unity.app/Contents/MacOS/Unity' -batchmode -quit -logFile -projectPath '%s' -exportPackage %s %s",
+        sh sprintf("'%s/Unity.app/Contents/MacOS/Unity' -batchmode -quit #{@verbose} -projectPath '%s' -exportPackage %s %s",
           @unity_path,
           @project_path,
           spec.files.select{|f| f.match(/^Assets\//) }.join(' '),
@@ -69,14 +71,14 @@ module Env
     end
 
     def create_empty_project
-      sh sprintf("'%s/Unity.app/Contents/MacOS/Unity' -batchmode -quit -logFile -createProject '%s'",
+      sh sprintf("'%s/Unity.app/Contents/MacOS/Unity' -batchmode -quit #{@verbose} -createProject '%s'",
         @unity_path,
         @test_path
       )
     end
 
     def execute_unity_method(method)
-      sh sprintf("'%s/Unity.app/Contents/MacOS/Unity' -batchmode -logFile -projectPath '%s' -executeMethod %s -resultsFileDirectory='%s'",
+      sh sprintf("'%s/Unity.app/Contents/MacOS/Unity' -batchmode #{@verbose} -projectPath '%s' -executeMethod %s -resultsFileDirectory='%s'",
         @unity_path,
         @test_path,
         method,
@@ -85,7 +87,7 @@ module Env
     end
 
     def import_package(package_path)
-      sh sprintf("'%s/Unity.app/Contents/MacOS/Unity' -batchmode -quit -logFile -projectPath '%s' -importPackage '%s'",
+      sh sprintf("'%s/Unity.app/Contents/MacOS/Unity' -batchmode -quit #{@verbose} -projectPath '%s' -importPackage '%s'",
         @unity_path,
         @project_path,
         package_path
