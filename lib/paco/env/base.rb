@@ -115,6 +115,8 @@ module Env
       end
 
       raise 'error. not found' unless File.exist?(file)
+
+      file
     end
   end
 end
