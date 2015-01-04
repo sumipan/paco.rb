@@ -21,134 +21,47 @@ task :install do |task,args|
   file = ARGV[1]
 
   Rake::Task[:setup].invoke
-  unless File.exist?(file) then
-    match = file.match(/^(.+)(:?-(\d+\.\d+\.\d+))?(:?.zip)?$/)
-    if @repository then
-      found_file = @repository.get(match[1], match[2])
-      if found_file then
-        file = found_file
-      end
-    end
-  end
-  raise 'error. not found' unless File.exist?(file)
 
-  spec = nil
-  zipfile = File.expand_path(file)
-  Zip::File.open(zipfile) do |zipfile|
-    zipfile.each do |entry|
-      destfile = ENV['PACO_UNITY_PROJECT_PATH'] + '/' + entry.name
-
-      FileUtils.remove(entry.name, {:verbose => true}) if File.exist?(entry.name)
-      puts "Extract #{entry.name}"
-      entry.extract(destfile)
-
-      if File.extname(entry.name) == '.paco' then
-        spec = eval File.read(destfile)
-      end
-    end
-  end
-
-  sh sprintf("'%s/Unity.app/Contents/MacOS/Unity' -batchmode -quit -logFile -projectPath '%s' -importPackage '%s'",
-    ENV['PACO_UNITY_PATH'].strip.sub('/$',''),
-    ENV['PACO_UNITY_PROJECT_PATH'].strip,
-    spec.name + '.unitypackage')
+  env = Paco::Env::Unity.new
+  env.get_package_file file, @repository
+  env.install file
 end
 
 task :build do |task,args|
   raise 'error.' if !ARGV[1] || !ARGV[1].match(/\.paco$/)
 
   spec = eval File.read(File.expand_path(ARGV[1]))
+  env  = Paco::Env::Unity.new
 
-  sh sprintf("'%s/Unity.app/Contents/MacOS/Unity' -batchmode -quit -logFile -projectPath '%s' -exportPackage %s %s",
-    ENV['PACO_UNITY_PATH'].strip.sub('/$',''),
-    Dir.pwd,
-    spec.files.join(' '),
-    spec.name + '.unitypackage')
+  files = env.build(spec)
+  files.push spec.name + '.paco'
 
   zipfile = spec.path + '.zip'
-  FileUtils.remove(zipfile) if File.exist?(zipfile)
-
-  Zip::File.open(zipfile, Zip::File::CREATE) do |zipfile|
-    [
-      spec.name + '.unitypackage',
-      spec.name + '.paco'
-    ].each do |filename|
-      zipfile.add(filename, filename)
-    end
-  end
-
-  FileUtils.remove(spec.name + '.unitypackage')
+  env.zip(zipfile, files)
 end
 
 desc 'test'
 task :test do |task,args|
   Rake::Task[:cleanup].execute
 
-  FileUtils.mkdir_p(ENV['PACO_TEST_PATH']) \
-    unless Dir.exist?(ENV['PACO_TEST_PATH'])
-
-  # create empty project
-  sh sprintf("'%s/Unity.app/Contents/MacOS/Unity' -batchmode -quit -logFile -createProject '%s'",
-    ENV['PACO_UNITY_PATH'].strip.sub('/$',''),
-    ENV['PACO_TEST_PATH'].strip)
-
   ENV['PACO_UNITY_PROJECT_PATH'] = ENV['PACO_TEST_PATH']
-
-  # import UnityTestTools package
-  sh sprintf("'%s/Unity.app/Contents/MacOS/Unity' -batchmode -quit -logFile -projectPath '%s' -importPackage '%s'",
-    ENV['PACO_UNITY_PATH'].strip.sub('/$',''),
-    ENV['PACO_TEST_PATH'].strip,
-    ENV['PACO_TEST_UNITY_TEST_TOOLS_PATH'])
-
-  # install specific package
-  if ARGV[1] then
-    ENV['PACO_UNITY_PROJECT_PATH'] = ENV['PACO_TEST_PATH']
-    Rake::Task[:install].execute
-  end
-
-  # run test
-  Rake::Task[:test_run].execute
-end
-
-task :test_run do |task,args|
-  begin
-    sh sprintf("'%s/Unity.app/Contents/MacOS/Unity' -batchmode -logFile -projectPath '%s' -executeMethod UnityTest.Batch.RunIntegrationTests -resultsFileDirectory='%s'",
-    ENV['PACO_UNITY_PATH'].strip.sub('/$',''),
-    ENV['PACO_TEST_PATH'].strip,
-    ENV['PACO_TEST_PATH'].strip)
-  rescue
-    # ignore RunIntegrationTests exit code
-  end
-
-  begin
-    sh sprintf("'%s/Unity.app/Contents/MacOS/Unity' -batchmode -logFile -projectPath '%s' -executeMethod UnityTest.Batch.RunUnitTests -resultsFileDirectory='%s'",
-    ENV['PACO_UNITY_PATH'].strip.sub('/$',''),
-    ENV['PACO_TEST_PATH'].strip,
-    ENV['PACO_TEST_PATH'].strip)
-  rescue
-    # ignore RunUnitTests exit code
-  end
+  Paco::Env::Unity.new.test
 end
 
 task :cleanup do |task,args|
-  if Dir.exist?(ENV['PACO_TEST_PATH']) then
-    Dir.entries(ENV['PACO_TEST_PATH']).each do |path|
-      next if path.match(/^\.{1,2}$/)
-
-      absolute_path = sprintf("%s/%s", ENV['PACO_TEST_PATH'], path)
-      if File.directory?(absolute_path)
-        FileUtils.remove_dir(absolute_path)
-      else
-        FileUtils.remove(absolute_path, {:force => true, :verbose => true})
-      end
-    end
-  end
+  Paco::Env::Unity.new.cleanup
 end
 
 desc 'help'
 task :help do |task,args|
   puts <<HELP
-[usage] peco test [package ...]
+[usage] peco <command> [<args>]
+
+The most commonly used paco commands are:
+   install  Install package
+   build    Build package
+   test     Test package
+   help     Show help
 HELP
 end
 
@@ -160,10 +73,6 @@ rescue => e
   Rake::Task[:help].invoke
   exit 1
 end
-
-# check PACO_UNITY_PATH
-raise 'error. Please set PACO_UNITY_PATH environment.' \
-  if !ENV['PACO_UNITY_PATH'] || !File.exist?(ENV['PACO_UNITY_PATH'])
 
 ENV['PACO_TEST_PATH'] = Dir.tmpdir if !ENV['PACO_TEST_PATH']
 
