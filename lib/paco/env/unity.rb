@@ -42,6 +42,9 @@ module Env
 
     def install(file)
       files = unzip(file)
+      specfile = files.select{|f| f.match(/^.+\.paco$/) }.first
+      resolve_dependency(specfile)
+
       files.each do |file|
         if file.match(/\.unitypackage$/) then
           import_package(file)
