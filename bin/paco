@@ -6,32 +6,37 @@ require 'paco'
 require 'zip'
 
 task :setup do |task,args|
-  pacofile_path = Dir.pwd + '/.paco'
-  if File.exist?(pacofile_path) then
-    config = YAML.load(File.read(pacofile_path))
-    if config['repository'] then
-      @repository = Paco::Repository.factory(config['repository'])
-    end
+  module Paco
+    pacofile = Dir.pwd + '/Pacofile'
+    raise 'error. Pacofile not found' unless File.exist?(pacofile)
+
+    eval File.read(pacofile)
   end
 end
 
 task :install do |task,args|
-  raise 'error.' if !ARGV[1]
-
-  file = ARGV[1]
-
   Rake::Task[:setup].invoke
+  env = Paco::Config.instance.env
 
-  env = Paco::Env::Unity.new
-  env.get_package_file file, @repository
-  env.install file
+  if ARGV[1] then
+    file = ARGV[1]
+    file = env.get_package_file file, Paco::Config.instance.repos
+    env.install file
+  else
+    Paco::Config.instance.dependencies.each do |dependency|
+      file = env.get_package_file dependency.shift, Paco::Config.instance.repos
+      env.install file
+    end
+  end
 end
 
 task :build do |task,args|
   raise 'error.' if !ARGV[1] || !ARGV[1].match(/\.paco$/)
 
+  Rake::Task[:setup].invoke
+
   spec = eval File.read(File.expand_path(ARGV[1]))
-  env  = Paco::Env::Unity.new
+  env  = Paco::Config.instance.env
 
   files = env.build(spec)
   files.push spec.name + '.paco'
@@ -40,16 +45,15 @@ task :build do |task,args|
   env.zip(zipfile, files)
 end
 
-desc 'test'
 task :test do |task,args|
-  Rake::Task[:cleanup].execute
-
   ENV['PACO_UNITY_PROJECT_PATH'] = ENV['PACO_TEST_PATH']
-  Paco::Env::Unity.new.test
+  Rake::Task[:cleanup].execute
+  Paco::Config.instance.env.test
 end
 
 task :cleanup do |task,args|
-  Paco::Env::Unity.new.cleanup
+  Rake::Task[:setup].invoke
+  Paco::Config.instance.env.cleanup
 end
 
 desc 'help'
@@ -73,8 +77,6 @@ rescue => e
   Rake::Task[:help].invoke
   exit 1
 end
-
-ENV['PACO_TEST_PATH'] = Dir.tmpdir if !ENV['PACO_TEST_PATH']
 
 # execute task
 Rake::Task[task].execute
