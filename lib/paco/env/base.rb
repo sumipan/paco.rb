@@ -126,7 +126,6 @@ module Env
       spec = eval File.read(@project_path + '/' + specfile)
       spec.dependencies.each do |dependency|
         file = get_package_file dependency[:name], Paco::Config.instance.repos
-        p file
         Paco::Config.instance.env.install file
       end
     end
