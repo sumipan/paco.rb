@@ -28,19 +28,24 @@ module Paco
       end
 
       def find(name, version=nil)
+        versions = []
         @collection.files.each do |file|
           if match = file.title.match(/^(#{name})-(\d+\.\d+\.\d+.*)\.zip$/) then
             if version then
               if version == match[2] then
                 return file
               end
-            else
-              return file
             end
+
+            versions.push({:file => file, :match => match})
           end
         end
 
-        nil
+        if versions.size == 0 || version != nil then
+          nil
+        else
+          versions.sort{|a,b| b[:match][2] <=> a[:match][2] }.first[:file]
+        end
       end
 
       def get(name, version=nil)
