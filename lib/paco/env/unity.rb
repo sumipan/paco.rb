@@ -43,6 +43,7 @@ module Env
     end
 
     def install(file)
+      puts sprintf("Install %s", file)
       files = unzip(file)
       specfile = files.select{|f| f.match(/^.+\.paco$/) }.first
       resolve_dependency(specfile)
