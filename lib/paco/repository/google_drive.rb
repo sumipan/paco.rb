@@ -1,3 +1,4 @@
+require 'google/api_client'
 require 'google_drive'
 
 module Paco
@@ -6,19 +7,34 @@ module Paco
       attr_reader :access_token, :session, :collection
 
       def initialize(email, pem, collection_url)
-        key    = Google::APIClient::KeyUtils.load_from_pkcs12(pem, 'notasecret')
-        client = Google::APIClient.new(:application_name => 'Ruby')
-        client.authorization = Signet::OAuth2::Client.new(
-          :token_credential_uri => 'https://accounts.google.com/o/oauth2/token',
-          :audience             => 'https://accounts.google.com/o/oauth2/token',
-          :scope                => 'https://www.googleapis.com/auth/drive https://spreadsheets.google.com/feeds https://docs.google.com/feeds',
-          :issuer               => email,
-          :signing_key          => key,
+
+        client = Google::APIClient.new(
+          :application_name => 'Paco Repository Browser',
+          :application_version => VERSION
         )
+        client_secrets = Google::APIClient::ClientSecrets.load
 
-        client.authorization.fetch_access_token!
+        auth               = client.authorization
+        auth.client_id     = client_secrets.client_id
+        auth.client_secret = client_secrets.client_secret
 
-        @access_token = client.authorization.access_token
+        @access_token = ENV['PACO_GOOGLE_ACCESS_TOKEN']
+        if !@access_token then
+          auth.scope         = 'https://www.googleapis.com/auth/drive https://spreadsheets.google.com/feeds https://docs.google.com/feeds'
+          auth.redirect_uri  = "https://localhost/"
+          print("1. Open url:\n%s\n\n" % auth.authorization_uri)
+          print("2. Enter code in url: ")
+          auth.code = $stdin.gets.chomp
+          auth.fetch_access_token!
+          @access_token = auth.access_token
+          puts ""
+          puts ("3. Set PACO_GOOGLE_ACCESS_TOKEN below token:")
+          puts ""
+          puts @access_token
+          puts ""
+          exit
+        end
+
         @session      = ::GoogleDrive.login_with_oauth(@access_token)
         begin
           @collection   = @session.collection_by_url(collection_url)
