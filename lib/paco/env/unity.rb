@@ -5,7 +5,7 @@ module Env
   class Unity < Base
     include Rake::FileUtilsExt
 
-    attr_reader :unity_path, :project_path, :verbose
+    attr_reader :unity_path, :project_path, :test_path, :verbose
 
     def initialize
       super
@@ -16,8 +16,6 @@ module Env
         if !ENV['PACO_UNITY_PATH'] || !File.exist?(ENV['PACO_UNITY_PATH'])
       raise 'error. check PACO_UNITY_PROJECT_PATH env.' \
         if !ENV['PACO_UNITY_PROJECT_PATH'] || !File.exist?(ENV['PACO_UNITY_PROJECT_PATH'])
-      raise 'erorr. check PACO_TEST_UNITY_TEST_TOOLS_PATH env.' \
-        if !ENV['PACO_TEST_UNITY_TEST_TOOLS_PATH'] || !File.exist?(ENV['PACO_TEST_UNITY_TEST_TOOLS_PATH'])
 
       @unity_path   = ENV['PACO_UNITY_PATH'].strip.sub('/$','')
       @project_path = ENV['PACO_UNITY_PROJECT_PATH']
@@ -96,6 +94,14 @@ module Env
     end
 
     def setup_test
+      raise 'error. check PACO_TEST_PATH env.' \
+        if !ENV['PACO_TEST_PATH']
+
+      raise 'erorr. check PACO_TEST_UNITY_TEST_TOOLS_PATH env.' \
+        if !ENV['PACO_TEST_UNITY_TEST_TOOLS_PATH'] || !File.exist?(ENV['PACO_TEST_UNITY_TEST_TOOLS_PATH'])
+
+      @test_path = ENV['PACO_TEST_PATH'].sub(/\/$/, '')
+
       FileUtils.mkdir_p(@test_path) unless Dir.exist?(@test_path)
 
       create_empty_project

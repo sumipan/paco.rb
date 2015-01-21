@@ -3,16 +3,12 @@ require 'zip'
 module Paco
 module Env
   class Base
-    attr_reader :test_path, :project_path
+    attr_reader :project_path
 
     # constructor
     #
     # @raise RuntimeError
     def initialize
-      raise 'error. check PACO_TEST_PATH env.' \
-        if !ENV['PACO_TEST_PATH']
-
-      @test_path = ENV['PACO_TEST_PATH'].sub(/\/$/, '')
     end
 
     # install package
