@@ -8,6 +8,10 @@ module Paco
     include Singleton
 
     attr_accessor :repos, :env, :dependencies
+
+    def initialize
+      Config.instance.dependencies = [] unless Config.instance.dependencies
+    end
   end
 
   def env(envname)
