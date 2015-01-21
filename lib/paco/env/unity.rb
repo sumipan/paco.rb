@@ -70,6 +70,11 @@ module Env
     end
 
     def cleanup
+      raise 'error. check PACO_TEST_PATH env.' \
+        if !ENV['PACO_TEST_PATH']
+
+      @test_path = ENV['PACO_TEST_PATH'].sub(/\/$/, '')
+
       if Dir.exist?(@test_path) then
         Dir.entries(@test_path).each do |path|
           next if path.match(/^\.{1,2}$/) # skip . or ..
