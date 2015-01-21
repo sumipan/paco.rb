@@ -72,6 +72,7 @@ module Env
           destfile = @project_path + '/' + entry.name
 
           FileUtils.remove(entry.name, {:verbose => true}) if File.exist?(entry.name)
+          FileUtils.mkdir_p(File.dirname(destfile)) if !Dir.exist?(File.dirname(destfile))
           puts "Extract #{entry.name}"
           entry.extract(destfile) do |entry,destfile|
             puts sprintf("%s is already exist. overwrite? [y/N]", entry.name)
