@@ -10,7 +10,7 @@ module Paco
     attr_accessor :repos, :env, :dependencies
 
     def initialize
-      Config.instance.dependencies = [] unless Config.instance.dependencies
+      @dependencies = []
     end
   end
 
