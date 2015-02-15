@@ -3,16 +3,12 @@ require 'zip'
 module Paco
 module Env
   class Base
-    attr_reader :test_path, :project_path
+    attr_reader :project_path
 
     # constructor
     #
     # @raise RuntimeError
     def initialize
-      raise 'error. check PACO_TEST_PATH env.' \
-        if !ENV['PACO_TEST_PATH']
-
-      @test_path = ENV['PACO_TEST_PATH'].sub(/\/$/, '')
     end
 
     # install package
@@ -46,19 +42,6 @@ module Env
     # @raise RuntimeError
     # @return [nil]
     def cleanup
-      if Dir.exist?(@test_path) then
-        Dir.entries(@test_path).each do |path|
-          next if path.match(/^\.{1,2}$/) # skip . or ..
-
-          absolute_path = sprintf("%s/%s", @test_path, path)
-          if File.directory?(absolute_path)
-            FileUtils.remove_dir(absolute_path)
-          else
-            FileUtils.remove(absolute_path, {:force => true, :verbose => true})
-          end
-        end
-      end
-
       nil
     end
 
@@ -89,6 +72,7 @@ module Env
           destfile = @project_path + '/' + entry.name
 
           FileUtils.remove(entry.name, {:verbose => true}) if File.exist?(entry.name)
+          FileUtils.mkdir_p(File.dirname(destfile)) if !Dir.exist?(File.dirname(destfile))
           puts "Extract #{entry.name}"
           entry.extract(destfile) do |entry,destfile|
             puts sprintf("%s is already exist. overwrite? [y/N]", entry.name)

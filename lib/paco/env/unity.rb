@@ -5,7 +5,7 @@ module Env
   class Unity < Base
     include Rake::FileUtilsExt
 
-    attr_reader :unity_path, :project_path, :verbose
+    attr_reader :unity_path, :project_path, :test_path, :verbose
 
     def initialize
       super
@@ -16,8 +16,6 @@ module Env
         if !ENV['PACO_UNITY_PATH'] || !File.exist?(ENV['PACO_UNITY_PATH'])
       raise 'error. check PACO_UNITY_PROJECT_PATH env.' \
         if !ENV['PACO_UNITY_PROJECT_PATH'] || !File.exist?(ENV['PACO_UNITY_PROJECT_PATH'])
-      raise 'erorr. check PACO_TEST_UNITY_TEST_TOOLS_PATH env.' \
-        if !ENV['PACO_TEST_UNITY_TEST_TOOLS_PATH'] || !File.exist?(ENV['PACO_TEST_UNITY_TEST_TOOLS_PATH'])
 
       @unity_path   = ENV['PACO_UNITY_PATH'].strip.sub('/$','')
       @project_path = ENV['PACO_UNITY_PROJECT_PATH']
@@ -71,6 +69,28 @@ module Env
       end
     end
 
+    def cleanup
+      raise 'error. check PACO_TEST_PATH env.' \
+        if !ENV['PACO_TEST_PATH']
+
+      @test_path = ENV['PACO_TEST_PATH'].sub(/\/$/, '')
+
+      if Dir.exist?(@test_path) then
+        Dir.entries(@test_path).each do |path|
+          next if path.match(/^\.{1,2}$/) # skip . or ..
+
+          absolute_path = sprintf("%s/%s", @test_path, path)
+          if File.directory?(absolute_path)
+            FileUtils.remove_dir(absolute_path)
+          else
+            FileUtils.remove(absolute_path, {:force => true, :verbose => true})
+          end
+        end
+      end
+
+      nil
+    end
+
     def create_empty_project
       sh sprintf("'%s/Unity.app/Contents/MacOS/Unity' -batchmode -quit #{@verbose} -createProject '%s'",
         @unity_path,
@@ -96,6 +116,14 @@ module Env
     end
 
     def setup_test
+      raise 'error. check PACO_TEST_PATH env.' \
+        if !ENV['PACO_TEST_PATH']
+
+      raise 'erorr. check PACO_TEST_UNITY_TEST_TOOLS_PATH env.' \
+        if !ENV['PACO_TEST_UNITY_TEST_TOOLS_PATH'] || !File.exist?(ENV['PACO_TEST_UNITY_TEST_TOOLS_PATH'])
+
+      @test_path = ENV['PACO_TEST_PATH'].sub(/\/$/, '')
+
       FileUtils.mkdir_p(@test_path) unless Dir.exist?(@test_path)
 
       create_empty_project
