@@ -41,6 +41,11 @@ task :build do |task,args|
   env  = Paco::Config.instance.env
 
   # TODO: workaround
+  FileUtils.copy(
+    spec.name + '.paco',
+    ENV['PACO_UNITY_PROJECT_PATH'] + '/' + spec.name + '.paco'
+  )
+
   Dir.chdir(ENV['PACO_UNITY_PROJECT_PATH']) do
     files = env.build(spec)
     files.push spec.name + '.paco'
