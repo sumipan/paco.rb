@@ -40,11 +40,14 @@ task :build do |task,args|
   spec = eval File.read(File.expand_path(ARGV[1]))
   env  = Paco::Config.instance.env
 
-  files = env.build(spec)
-  files.push spec.name + '.paco'
+  # TODO: workaround
+  Dir.chdir(ENV['PACO_UNITY_PROJECT_PATH']) do
+    files = env.build(spec)
+    files.push spec.name + '.paco'
 
-  zipfile = spec.path + '.zip'
-  env.zip(zipfile, files)
+    zipfile = spec.path + '.zip'
+    env.zip(zipfile, files)
+  end
 end
 
 task :test do |task,args|
