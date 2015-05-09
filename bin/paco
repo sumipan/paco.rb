@@ -49,7 +49,7 @@ Paco::Specification.new do |spec|
 end
 PACKAGE
 
-  File.write("#{ARGV[1].paco}", content)
+  File.write("#{ARGV[1]}.paco", content)
 end
 
 task :build do |task,args|
