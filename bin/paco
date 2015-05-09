@@ -20,6 +20,7 @@ task :uninstall do |task,args|
   paco = "#{ARGV[1]}.paco"
   spec = eval File.read(paco)
   env.uninstall spec
+  FileUtils.remove(paco, {:verbose => true})
 end
 
 task :install do |task,args|
