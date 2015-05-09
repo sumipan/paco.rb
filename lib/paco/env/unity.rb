@@ -49,8 +49,11 @@ module Env
       files.each do |file|
         if file.match(/\.unitypackage$/) then
           import_package(file)
+          FileUtils.remove(file, {:verbose => true})
         end
       end
+
+      FileUtils.remove(file, {:verbose => true})
     end
 
     def test
