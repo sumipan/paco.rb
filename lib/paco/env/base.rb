@@ -109,6 +109,9 @@ module Env
     def resolve_dependency(specfile)
       spec = eval File.read(@project_path + '/' + specfile)
       spec.dependencies.each do |dependency|
+        paco = "#{dependency[:name]}.paco"
+        next if File.exist?(paco)
+
         file = get_package_file dependency[:name], Paco::Config.instance.repos
         Paco::Config.instance.env.install file
       end
