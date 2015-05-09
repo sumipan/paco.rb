@@ -32,6 +32,26 @@ task :install do |task,args|
   end
 end
 
+task :init do |task,args|
+  raise "give package name." unless ARGV[1]
+
+  content = <<PACKAGE
+Paco::Specification.new do |spec|
+  spec.name          = "#{ARGV[1]}"
+  spec.version       = "0.0.1"
+  spec.authors       = ["Your name"]
+  spec.email         = ["Your email"]
+  spec.summary       = %q{}
+  spec.homepage      = ""
+
+  spec.files         = [
+  ]
+end
+PACKAGE
+
+  File.write("#{ARGV[1].paco}", content)
+end
+
 task :build do |task,args|
   raise 'error.' if !ARGV[1] || !ARGV[1].match(/\.paco$/)
 
