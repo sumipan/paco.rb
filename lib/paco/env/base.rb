@@ -21,6 +21,14 @@ module Env
       raise 'error. not implemented.'
     end
 
+    # uninstall package
+    #
+    # @param [Paco::Specification]
+    # @return [nil]
+    def uninstall(spec)
+      FileUtils.remove(spec.files, {:verbose => true})
+    end
+
     # build package
     #
     # @raise RuntimeError

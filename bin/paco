@@ -14,6 +14,14 @@ task :setup do |task,args|
   end
 end
 
+task :uninstall do |task,args|
+  Rake::Task[:setup].invoke
+  env = Paco::Config.instance.env
+  paco = "#{ARGV[1]}.paco"
+  spec = eval File.read(paco)
+  env.uninstall spec
+end
+
 task :install do |task,args|
   Rake::Task[:setup].invoke
   env = Paco::Config.instance.env
