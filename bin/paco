@@ -25,6 +25,10 @@ task :install do |task,args|
   else
     Paco::Config.instance.dependencies.each do |dependency|
       file = dependency.shift
+
+      paco = "#{file}.paco"
+      next if File.exist?(paco)
+
       file = sprintf("%s-%s", file, dependency.shift) if dependency.size > 0
       file = env.get_package_file file, Paco::Config.instance.repos
       env.install file
