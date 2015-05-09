@@ -54,6 +54,9 @@ module Env
       end
 
       FileUtils.remove(file, {:verbose => true})
+
+      # Hack
+      spec = eval File.read(@project_path + '/' + specfile)
     end
 
     def test
