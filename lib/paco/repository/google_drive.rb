@@ -7,7 +7,10 @@ module Paco
       attr_reader :access_token, :session, :collection
 
       def initialize(email, pem, collection_url)
+        @collection_url = collection_url
+      end
 
+      def setup
         client = Google::APIClient.new(
           :application_name => 'Paco Repository Browser',
           :application_version => VERSION
@@ -37,13 +40,15 @@ module Paco
 
         @session      = ::GoogleDrive.login_with_oauth(@access_token)
         begin
-          @collection   = @session.collection_by_url(collection_url)
+          @collection   = @session.collection_by_url(@collection_url)
         rescue => e
           raise 'error. can not access collection url.'
         end
       end
 
       def find(name, version=nil)
+        setup unless @collection
+
         versions = []
         @collection.files.each do |file|
           if match = file.title.match(/^(#{name})-(\d+\.\d+\.\d+.*)\.zip$/) then
@@ -65,6 +70,8 @@ module Paco
       end
 
       def get(name, version=nil)
+        setup unless @collection
+
         file = find(name, version)
         if file then
           file.download_to_file(file.title)
