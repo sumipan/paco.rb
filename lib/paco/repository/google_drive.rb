@@ -42,7 +42,7 @@ module Paco
         begin
           @collection   = @session.collection_by_url(@collection_url)
         rescue => e
-          raise 'error. can not access collection url.'
+          raise 'error. can not access collection url. set valid PACO_GOOGLE_ACCESS_TOKEN'
         end
       end
 
