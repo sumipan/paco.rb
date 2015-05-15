@@ -26,7 +26,7 @@ module Env
     # @param [Paco::Specification]
     # @return [nil]
     def uninstall(spec)
-      FileUtils.remove(spec.files, {:verbose => true})
+      FileUtils.remove(spec.files, {:verbose => true, :force => true})
     end
 
     # build package
