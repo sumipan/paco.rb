@@ -33,9 +33,8 @@ module Paco
           puts ""
           puts ("3. Set PACO_GOOGLE_ACCESS_TOKEN below token:")
           puts ""
-          puts @access_token
+          puts "export PACO_GOOGLE_ACCESS_TOKEN=#{@access_token}"
           puts ""
-          exit
         end
 
         @session      = ::GoogleDrive.login_with_oauth(@access_token)
